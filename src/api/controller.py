@@ -63,7 +63,7 @@ buttons = {
 }
 
 # Load the PS4 controller overlay
-ps4_controller_image = pygame.image.load("ps4_controller3(1000x598).png")
+# ps4_controller_image = pygame.image.load("ps4_controller3(1000x598).png")
 
 # run 
 while True:
@@ -119,23 +119,24 @@ while True:
     leftStick_y = axes["left_y"]
     
     # move leftStick
-    left_xSpeed = round(leftStick_x, 5)
-    left_ySpeed = round(leftStick_y, 5)
+    left_xSpeed = round(leftStick_x)
+    left_ySpeed = round(leftStick_y)
     leftStick.move(left_xSpeed*3, left_ySpeed*3)
+    leftStick.getStickAngle(leftStick_x, leftStick_y) # prints out the angle for the left stik
     
     #get joystick values for right (to be sent to board)
     rightStick_x = axes["right_x"]
     rightStick_y = axes["right_y"]
 
     # move player2
-    right_xSpeed2 = round(rightStick_x, 5)
-    right_ySpeed2 = round(rightStick_y, 5)
+    right_xSpeed2 = round(rightStick_x)
+    right_ySpeed2 = round(rightStick_y)
     rightStick.move(right_xSpeed2*3, right_ySpeed2*3)
     
     screen.fill((0, 0, 0)) # black background
 
     # Draw the PS4 controller image onto the display window
-    screen.blit(ps4_controller_image, (-50, 500))
+    # screen.blit(ps4_controller_image, (-50, 500))
 
     leftStick.draw(screen)
     rightStick.draw(screen)
