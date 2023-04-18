@@ -21,7 +21,7 @@ joystick.init()
 
 layout += [[sg.Spin([sz for sz in range(0, 101)], font=('Helvetica 20'), initial_value=valueSet, enable_events=True, key='spin'),],
           [sg.Text("Reverse Trigger", font="Helvetica 20", key='text'),
-           sg.Slider(range=(-100, 0), orientation='v', size=(10,20),
+           sg.Slider(range=(0, 100), orientation='v', size=(10,20),
            enable_events=True, key='sliderReverse', font=('Helvetica 20')),
            sg.Slider(range=(0, 100), orientation='v', size=(10,20),
            enable_events=True, key='sliderForward', font=('Helvetica 20')),
@@ -53,7 +53,7 @@ while True:
                 right_trigger_value = round(joystick.get_axis(5),2)
                 if lastRightTrigger == None:
                     lastRightTrigger = right_trigger_value
-                elif (abs(right_trigger_value - lastRightTrigger) < .05 * 2):
+                elif (abs(right_trigger_value - lastRightTrigger) < .01 * 1):
                     continue
                 else: 
                     lastRightTrigger = right_trigger_value
@@ -63,24 +63,23 @@ while True:
                 left_stick_value = joystick.get_axis(0)
                 if lastAngle == None:
                     lastAngle = left_stick_value
-                elif (abs(left_stick_value - lastAngle) < .05 * 2):
+                elif (abs(left_stick_value - lastAngle) < .01 * 1):
                     continue
                 else:
                     lastAngle = left_stick_value
                     print(f'Left stick x: {lastAngle}')
     
-    for event in sg.event.get():
-        values= window.read(timeout=20)
-        if event == sg.WIN_CLOSED:
-            break
-        sz_spin = int(values['spin'])
-        # sz_slider = int(values['slider'])
-        sz = sz_spin
-        valueSet = sz
-        font = "Helvetica "  + str(valueSet)
-        window['sliderReverse'].update(-1*int(lastLeftTrigger*50+50))
-        window['sliderHorizontal'].update(int(lastAngle*100))
-        window['sliderForward'].update(int(lastRightTrigger*50+50))
-        window['spin'].update(sz)
+    event, values= window.read(timeout=20)
+    if event == sg.WIN_CLOSED:
+        break
+    sz_spin = int(values['spin'])
+    # sz_slider = int(values['slider'])
+    sz = sz_spin
+    valueSet = sz
+    font = "Helvetica "  + str(valueSet)
+    window['sliderReverse'].update(int(lastLeftTrigger*50+50))
+    window['sliderHorizontal'].update(int(lastAngle*100))
+    window['sliderForward'].update(int(lastRightTrigger*50+50))
+    window['spin'].update(sz)
         
     # window['-I-'].update(data=cv2.imencode('.ppm', cap.read()[1])[1].tobytes())  # Update image in window
