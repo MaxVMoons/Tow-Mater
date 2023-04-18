@@ -69,17 +69,18 @@ while True:
                     lastAngle = left_stick_value
                     print(f'Left stick x: {lastAngle}')
     
-    event, values= window.read(timeout=20)
-    if event == sg.WIN_CLOSED:
-        break
-    sz_spin = int(values['spin'])
-    # sz_slider = int(values['slider'])
-    sz = sz_spin
-    valueSet = sz
-    font = "Helvetica "  + str(valueSet)
-    window['sliderReverse'].update(-1*int(lastLeftTrigger*50+50))
-    window['sliderHorizontal'].update(int(lastAngle*50+50)*2-100)
-    window['sliderForward'].update(int(lastRightTrigger*50+50))
-    window['spin'].update(sz)
+    for event in sg.event.get():
+        values= window.read(timeout=20)
+        if event == sg.WIN_CLOSED:
+            break
+        sz_spin = int(values['spin'])
+        # sz_slider = int(values['slider'])
+        sz = sz_spin
+        valueSet = sz
+        font = "Helvetica "  + str(valueSet)
+        window['sliderReverse'].update(-1*int(lastLeftTrigger*50+50))
+        window['sliderHorizontal'].update(int(lastAngle*100))
+        window['sliderForward'].update(int(lastRightTrigger*50+50))
+        window['spin'].update(sz)
         
     # window['-I-'].update(data=cv2.imencode('.ppm', cap.read()[1])[1].tobytes())  # Update image in window
