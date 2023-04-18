@@ -33,6 +33,29 @@ def countdown():
         print(i)
         time.sleep(1)
 
+def quitPygame():
+    pygame.quit()
+    exit()
+
+'''  
+Determines whether to send the current_value, depending if the difference from the last_value is over the threshold.
+current_value is value output from controller
+last_value was the last_value sent to the beagle board
+percentThreshold is the % difference that needs to be met 
+range is the range of the possible values of an input (e.g. trigger is -1 to 1. Range is 2)
+'''
+def update_last_value(current_value, last_value, percentThreshold, range):
+    if last_value is None:
+        return current_value
+    
+    diff = abs(current_value - last_value)
+    threshold = percentThreshold * range
+    
+    if diff > threshold:
+        return current_value
+    
+    return last_value
+
 # see controller object plugged in
 pygame.joystick.init()
 joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
@@ -79,55 +102,52 @@ lastLeftTrigger = None
 lastRightTrigger = None
 while True:
     for event in pygame.event.get():
+        
         # Buttons
         if event.type == pygame.JOYBUTTONDOWN:
             if joystick.get_button(0):
-                print("Sending X")
-                client_UDP.send("X")
+                print('Sending ready signal to RM')
+                client_UDP.send(('x', 0))
             elif joystick.get_button(3):
-                print("Quitting pygame, leaving server open")
-                client_UDP.send("Triangle")
-                pygame.quit()
-                exit()
+                print('Quitting pygame, leaving server open')
+                client_UDP.send(('triangle', 0))
+                quitPygame()
             elif event.button in [4,5,6]:
-                print("Quitting")
-                client_UDP.send(client_UDP.DISCONNECT_MESSAGE) 
-                pygame.quit()
-                exit()
+                print("Quitting pygame AND the server on the beagleboard")
+                client_UDP.send((client_UDP.DISCONNECT_MESSAGE, 666)) 
+                quitPygame()
+                
         # Triggers/Stick
         elif event.type == pygame.JOYAXISMOTION:
             # Left trigger
             if event.axis == 4:
                 left_trigger_value = round(joystick.get_axis(4),2)
-                if lastLeftTrigger == None: 
-                    lastLeftTrigger = left_trigger_value
-                elif (abs(left_trigger_value - lastLeftTrigger) < .05 * 2):
-                    continue
-                else:
-                    lastLeftTrigger = left_trigger_value
-                print("Sending left trigger value: ", lastLeftTrigger)
-                client_UDP.send(str(lastLeftTrigger))
+                newLeftTrigger = update_last_value(left_trigger_value, lastLeftTrigger, 0.05, 2)
+                if (newLeftTrigger == lastLeftTrigger):
+                  continue
+                print("Sending left trigger value: ", newLeftTrigger)
+                client_UDP.send(('left_trigger', newLeftTrigger))
+                lastLeftTrigger = newLeftTrigger
+                
             # Right trigger
             elif event.axis == 5:
                 right_trigger_value = round(joystick.get_axis(5),2)
-                if lastRightTrigger == None:
-                    lastRightTrigger = right_trigger_value
-                elif (abs(right_trigger_value - lastRightTrigger) < .05 * 2):
+                newRightTrigger = update_last_value(right_trigger_value, lastRightTrigger, 0.05, 2)
+                if (newRightTrigger == lastRightTrigger):
                     continue
-                else: 
-                    lastRightTrigger = right_trigger_value
-                print("Sending right trigger value: ", lastRightTrigger)
-                client_UDP.send(str(lastRightTrigger))
-            # Left stick
+                print("Sending right trigger value: ", newRightTrigger)
+                client_UDP.send(('right_trigger', newRightTrigger))
+                lastRightTrigger = newRightTrigger
+                
+            # Left stick -> Angle
             elif event.axis == 0 or event.axis == 1:
-                left_stick_value = int(leftStick.moveStick(joystick.get_axis(0), joystick.get_axis(1)))
-                if lastAngle == None:
-                    lastAngle = left_stick_value
-                elif (abs(left_stick_value - lastAngle) < .05 * 360): #don't send if angle didn't change much
+                left_stick_angle = int(leftStick.moveStick(joystick.get_axis(0), joystick.get_axis(1)))
+                newAngle = update_last_value(left_stick_angle, lastAngle, 0.05, 360)
+                if (newAngle == lastAngle):
                     continue
-                else:
-                    lastAngle = left_stick_value
-                print(f'Sending angle: {lastAngle}')
-                client_UDP.send(str(lastAngle))
+                print(f'Sending angle: {newAngle}')
+                client_UDP.send(('left_stick', newAngle))
+                lastAngle = newAngle
 
+    # Adjust how much the pygame is updated
     clock.tick(60)
