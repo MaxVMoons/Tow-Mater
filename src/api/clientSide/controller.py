@@ -19,9 +19,23 @@ class Stick(object):
     
     def getStickAngle(self, x_axis, y_axis):
         angle = math.degrees(math.atan2(y_axis, x_axis))
-        if angle < 0: angle += 360
-        return angle
-    
+        if angle < 0: angle *= -1
+        
+        # Current range is 0-180. Put in valid angle range for servo: 
+        valid_angle_min = 1.2
+        valid_angle_max = 195.3
+
+        # Map the angle to the valid angle range
+        output_angle = valid_angle_min + (angle / 180.0) * (valid_angle_max - valid_angle_min)
+
+        # Ensure the output angle stays within the valid angle range
+        if output_angle > valid_angle_max:
+            output_angle = valid_angle_max
+        elif output_angle < valid_angle_min:
+            output_angle = valid_angle_min
+            
+        return output_angle
+           
     def moveStick(self, xAxis, yAxis):
         xSpeed = round(xAxis, 5)
         ySpeed = round(yAxis, 5)
@@ -151,3 +165,5 @@ while True:
 
     # Adjust how much the pygame is updated
     clock.tick(60)
+
+# TODO: adjust triggers to fit with motor constraints

@@ -2,11 +2,12 @@ import socket
 import json
 
 #SERVER = '192.168.1.234' #put IPv4 address of server (beagle boa) here
-SERVER = '192.168.1.155' 
+#SERVER = '192.168.1.155' 
 #SERVER = '192.168.1.229'
 #SERVER = '192.168.8.220'
 #SERVER = '10.151.129.96'
 #SERVER = '10.151.143.174'
+SERVER = '192.168.6.2'
 PORT = 6969
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
