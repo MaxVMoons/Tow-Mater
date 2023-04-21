@@ -2,6 +2,9 @@ import pygame
 import math
 import time
 import client_UDP
+import PySimpleGUI as sg
+# import cv2
+
 
 class Stick(object):
     def __init__(self, color):
@@ -41,6 +44,14 @@ class Stick(object):
         ySpeed = round(yAxis, 5)
         #self.move(xSpeed*20, ySpeed*20)
         return self.getStickAngle(xSpeed, ySpeed * -1)
+    
+    def getStickAngleAlt(self, x_axis, y_axis):
+        return 90 + (90-1.2)*x_axis
+    
+    def moveStickAlt(self,xAxis, yAxis):
+        
+        
+        return self.getStickAngleAlt(xAxis, yAxis)
 
 def countdown():
     for i in range(3, 0, -1):
@@ -108,12 +119,41 @@ buttons = {
     "touchpad": 15
 }
 
+#Initialize simpleGUI layout
+layout = []
+
+#Video Capture display
+# layout += [[sg.Image(key='-I-')], ]
+# cap = cv2.VideoCapture(0)  # Setup the camera as a capture device
+
+layout += [[sg.Text("Reverse Trigger", font="Helvetica 20", key='text'),
+           sg.Slider(range=(0, 100), orientation='v', size=(10,20),
+           enable_events=True, key='sliderReverse', font=('Helvetica 20')),
+           sg.Slider(range=(0, 100), orientation='v', size=(10,20),
+           enable_events=True, key='sliderForward', font=('Helvetica 20')),
+           sg.Text("Acceleration Trigger", font="Helvetica 20", key='text')],
+          [sg.Text("Stick Horizontal Position", font="Helvetica 20", key='text'),
+           sg.Slider(range=(-100, 100), orientation='h', size=(10,20),
+           enable_events=True, key='sliderHorizontal', font=('Helvetica 20')),],
+          [sg.Text("Ready signal to rm has not been sent", font="Helvetica 20", key='signal',
+           enable_events=True),]]
+
+#Window from pySimpleGUI
+windowSG = sg.Window("Controller GUI", layout, grab_anywhere=False)
+
 countdown()
 
 # run 
 lastAngle = None
 lastLeftTrigger = None
 lastRightTrigger = None
+
+displayLeftTrigger = 0.0
+displayRightTrigger = 0.0
+displayjoystickx = 0.0
+
+readySignalSent = False
+
 while True:
     for event in pygame.event.get():
         
@@ -122,6 +162,9 @@ while True:
             if joystick.get_button(0):
                 print('Sending ready signal to RM')
                 client_UDP.send(('x', 0))
+                readySignalSent = True
+                eventSG, values= windowSG.read(timeout=20)
+                windowSG['signal'].update("Ready signal to rm has been sent")
             elif joystick.get_button(3):
                 print('Quitting pygame, leaving server open')
                 client_UDP.send(('triangle', 0))
@@ -135,8 +178,9 @@ while True:
         elif event.type == pygame.JOYAXISMOTION:
             # Left trigger
             if event.axis == 4:
-                left_trigger_value = round(joystick.get_axis(4),2)
-                newLeftTrigger = update_last_value(left_trigger_value, lastLeftTrigger, 0.05, 2)
+                left_trigger_value = round(joystick.get_axis(4),3)
+                displayLeftTrigger = joystick.get_axis(4)
+                newLeftTrigger = update_last_value(left_trigger_value, lastLeftTrigger, 0.05, 1) #Changed threshold to 0.05 input difference
                 if (newLeftTrigger == lastLeftTrigger):
                   continue
                 print("Sending left trigger value: ", newLeftTrigger)
@@ -145,8 +189,9 @@ while True:
                 
             # Right trigger
             elif event.axis == 5:
-                right_trigger_value = round(joystick.get_axis(5),2)
-                newRightTrigger = update_last_value(right_trigger_value, lastRightTrigger, 0.05, 2)
+                right_trigger_value = round(joystick.get_axis(5),3)
+                displayRightTrigger = joystick.get_axis(5)
+                newRightTrigger = update_last_value(right_trigger_value, lastRightTrigger, 0.05, 1) #Changed threshold to 0.05 input difference
                 if (newRightTrigger == lastRightTrigger):
                     continue
                 print("Sending right trigger value: ", newRightTrigger)
@@ -155,8 +200,9 @@ while True:
                 
             # Left stick -> Angle
             elif event.axis == 0 or event.axis == 1:
-                left_stick_angle = int(leftStick.moveStick(joystick.get_axis(0), joystick.get_axis(1)))
-                newAngle = update_last_value(left_stick_angle, lastAngle, 0.05, 360)
+                left_stick_angle = int(leftStick.moveStickAlt(joystick.get_axis(0), joystick.get_axis(1)))
+                displayjoystickx = joystick.get_axis(0)
+                newAngle = update_last_value(left_stick_angle, lastAngle, 0.01, 180) #Changed threshold to be 10x smaller
                 if (newAngle == lastAngle):
                     continue
                 print(f'Sending angle: {newAngle}')
@@ -166,4 +212,14 @@ while True:
     # Adjust how much the pygame is updated
     clock.tick(60)
 
+    eventSG, values= windowSG.read(timeout=20)
+    if(lastLeftTrigger != None):
+        windowSG['sliderReverse'].update(int(displayLeftTrigger*50+50))
+    if(lastAngle != None):
+        windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
+    if(lastRightTrigger != None):
+        windowSG['sliderForward'].update(int(displayRightTrigger*50+50))
+    
+    # windowSG['-I-'].update(data=cv2.imencode('.ppm', cap.read()[1])[1].tobytes())  # Update image in window
+    
 # TODO: adjust triggers to fit with motor constraints
