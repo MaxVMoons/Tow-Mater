@@ -1,4 +1,5 @@
 import pygame
+import racer
 import math
 import time
 import client_UDP
@@ -109,6 +110,10 @@ buttons = {
 }
 
 countdown()
+
+# Racer Connection to Race Management with car creation
+racerConnect = racer.RaceConnection("G17")
+racerConnect.start()
 
 # run 
 lastAngle = None
