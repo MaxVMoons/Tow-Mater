@@ -23,21 +23,38 @@ A duty cycle of 7.5% is fully stopped, so I would go from 7.5 -> 7 -> 6.5 ->... 
 
 After initialization, you just need to use the PWM.set_duty_cycle("P9_16",dutyCycle) command
 
-TODO: figure out range for motor 
+TODO: figure out range for motor by testing on car. Figure out range for no motor movement. Figure out upper and lower bounds for triggers. Boost and reverse boost.
 '''
 
 import Adafruit_BBIO.PWM as PWM
 
 servoPin="P9_16"
-duty = 0 # initial value
+duty = 0
 freq = 50
+
+# Translate [-2, 0, 2] to [5, 7.5, 10]
+# TODO: if BOOST or REVBOOST, try to find a way to accerlate smoothly.
+def translateThrottle(inputThrottle):
+        if inputThrottle == 'BOOST':
+                return 10
+        elif inputThrottle == 'REVBOOST':
+                return 5
+        else:
+                scale = 5 #the higher the scale, the lower the range for the throttle
+                return (inputThrottle / scale) + 7.5 #TODO: check why forwards/backwards is opposite (requires -)
 
 class Motor(object):
         def __init__(self):
                 PWM.start(servoPin, duty, freq)
+                PWM.set_duty_cycle("P9_16",7.5) #TODO: arm esc instead of setting duty cycle
 
-        def changeThrottle(self, desiredThrottle: float):
-                #desiredThrottle=float(input("What throttle do You Want: "))
-                dutyCycle= 1/18*desiredThrottle + 2
+        def changeThrottle(self, dutyCycle: float):
+                #dutyCycle=float(input("What throttle do You Want (5-10; 7.5 to stop): ")) #debugging
+                dutyCycle = round(translateThrottle(dutyCycle), 1)
                 PWM.set_duty_cycle(servoPin, dutyCycle)
-                print("Current dutyCycle", dutyCycle)
+                print(f'Current dutyCycle for motor: {dutyCycle}')
+'''
+motor = Motor()
+while True:
+        motor.changeThrottle(69)
+'''
