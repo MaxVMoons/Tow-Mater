@@ -16,14 +16,17 @@ HTML="""
 def main():
     StreamProps = ps.StreamProps
     StreamProps.set_Page(StreamProps,HTML)
-    address = ('192.168.7.2',9000) # Enter your IP address 
+    address = ('192.168.8.153',9000) # Enter your IP address 
     try:
         StreamProps.set_Mode(StreamProps,'cv2')
+        
         capture = cv2.VideoCapture(0)
+        capture.set(cv2.CAP_PROP_FOURCC,cv2.VideoWriter_fourcc('M','J','P','G'))
         capture.set(cv2.CAP_PROP_BUFFERSIZE,4)
-        capture.set(cv2.CAP_PROP_FRAME_WIDTH,640)
-        capture.set(cv2.CAP_PROP_FRAME_HEIGHT,480)
-        capture.set(cv2.CAP_PROP_FPS,30)
+        capture.set(cv2.CAP_PROP_FRAME_WIDTH,320)
+        capture.set(cv2.CAP_PROP_FRAME_HEIGHT,240)
+        capture.set(cv2.CAP_PROP_FPS,24)
+
         StreamProps.set_Capture(StreamProps,capture)
         StreamProps.set_Quality(StreamProps,90)
         server = ps.Streamer(address,StreamProps)
@@ -36,4 +39,3 @@ def main():
         
 if __name__=='__main__':
     main()
-    
