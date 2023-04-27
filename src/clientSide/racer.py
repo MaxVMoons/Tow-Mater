@@ -4,34 +4,61 @@ import time
 import subprocess
 
 
+# IMPORTANT:
+# ENSURE YOU HAVE INSTALLED SOCKETIO. pip install "python-socketio[client]" is the command to do so.
+# READ THROUGH THIS CODE TO UNDERSTAND HOW YOU WILL RECEIVE THE UDP LINK WHERE THE BBB SHOULD STREAM TO!
+
 class RaceConnection:
+    # Globals
     sio = socketio.Client()
+    sendFeed = ""
+    global_RM_ip = ""
 
     def __init__(self, hostname):
-        try:
+        try:  # We will try and install socketio if you don't already have it.
             subprocess.check_call(
-                ["pip", "install", "python-socketio"]
-            )  # Install dependencies
+                ["pip", "install", "python-socketio[client]"]
+            )
         except subprocess.CalledProcessError as e:
             print("Error installing python-socketio:", e)
+            exit(-1)
 
+        # Race Management's IP Address. Determined by hostname,
         self.ip_address = socket.gethostbyname(hostname)
+        RaceConnection.global_RM_ip = self.ip_address
+        # which will be "G17". Be sure to load that value
         self.RM = "http://" + self.ip_address + ":3000"
-
+        # into hostname when creating an instance of this class.
         self.sio.on("connect", self.on_connect)
         self.sio.on("disconnect", self.on_disconnect)
         self.connected = False
         self.race_number = 0
         self.name = ""
+        self.sendFeed = ""
 
     @sio.on("server-msg")
+    # On sio events, self actually refers to the message sent by the server, not the object.
     def on_server_mg(self):
         print("Server message:", self)
 
-    # Listen to which rtsp server to connect to
+    # Retrieve which UDP link to stream to, store it in sendFeed.
     @sio.on("get-rtsp-server")
     def on_get_rtsp(self):
         print("Server to connect to:", self)
+        if len(RaceConnection.sendFeed) == 0 and len(RaceConnection.global_RM_ip) != 0:
+            if self == 1:
+                RaceConnection.sendFeed = "udp://" + RaceConnection.global_RM_ip + ":33113"
+                print(
+                    f"Stream BBB camera to this endpoint: {RaceConnection.sendFeed}")
+            elif self == 2:
+                RaceConnection.sendFeed = "udp://" + RaceConnection.global_RM_ip + ":44775"
+                print(
+                    f"Stream BBB camera to this endpoint: {RaceConnection.sendFeed}")
+            print("The UDP link where you should stream your camera has been loaded into RaceConnection.sendFeed. "
+                  "Feel free to use this variable, you can send this to your BBB.")
+        else:
+            print("Could not retrieve UDP link. Please stop execution and run again.")
+            exit(-1)
 
     def on_connect(self):
         print("Connected\n")
@@ -69,7 +96,6 @@ class RaceConnection:
 
     def start(self):
         self.connect_to_RM()
-
         while True:
             command = input(
                 "To enter a new car, type n, else type q to quit. ")
@@ -81,4 +107,3 @@ class RaceConnection:
                 break
             else:
                 print("Invalid command, try again!")
-
