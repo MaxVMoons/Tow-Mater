@@ -179,7 +179,7 @@ displayjoystickx = 0.0
 readySignalSent = False  # TODO: add in Dan's code
 
 # Racer Connection to Race Management with car creation
-racerConnect = racer.RaceConnection("192.168.8.243")
+racerConnect = racer.RaceConnection("G17")
 racerConnect.start()
 # NEED TO GET UDP LINK, do racer.sendFeed to retreive.
 
