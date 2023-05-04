@@ -155,7 +155,7 @@ layout += [[sg.Text("Speed", font="Helvetica 20", key='text'),
            [sg.Text("Angle %", font="Helvetica 20", key='text'),
            sg.Slider(range=(-100, 100), orientation='h', size=(10, 20),
                      enable_events=True, key='sliderHorizontal', font=('Helvetica 20')),],
-           [sg.Text("Ready signal to rm has not been sent", font="Helvetica 20", key='signal',
+           [sg.Text("Steering and motor objects have not been launched", font="Helvetica 20", key='signal',
                     enable_events=True),]]
 
 # Window from pySimpleGUI
@@ -191,7 +191,7 @@ while True:
                 client_UDP.send(('x', 0))
                 readySignalSent = True
                 eventSG, values = windowSG.read(timeout=20)
-                windowSG['signal'].update("Ready signal to rm has been sent")
+                windowSG['signal'].update("Steering and motor objects have been launched")
             elif joystick.get_button(3):
                 print('Quitting pygame, leaving server open')
                 client_UDP.send(('triangle', 0))
@@ -228,7 +228,7 @@ while True:
     # Update GUI
     eventSG, values = windowSG.read(timeout=20)
     if (leftTriggerVal != None & rightTriggerVal != None):
-        windowSG['sliderReverse'].update(int((displayLeftTrigger+displayRightTrigger)*50))
+        windowSG['sliderReverse'].update(int((-1*displayLeftTrigger+displayRightTrigger)*50))
     if (angle != None):
         windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
 
