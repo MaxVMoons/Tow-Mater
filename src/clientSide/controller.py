@@ -149,13 +149,10 @@ layout = []
 # Video Capture display
 # layout += [[sg.Image(key='-I-')], ]
 # cap = cv2.VideoCapture(0)  # Setup the camera as a capture device
-layout += [[sg.Text("Reverse Trigger", font="Helvetica 20", key='text'),
-           sg.Slider(range=(0, 100), orientation='v', size=(10, 20),
-           enable_events=True, key='sliderReverse', font=('Helvetica 20')),
-           sg.Slider(range=(0, 100), orientation='v', size=(10, 20),
-           enable_events=True, key='sliderForward', font=('Helvetica 20')),
-           sg.Text("Acceleration Trigger", font="Helvetica 20", key='text')],
-           [sg.Text("Stick Horizontal Position", font="Helvetica 20", key='text'),
+layout += [[sg.Text("Speed", font="Helvetica 20", key='text'),
+           sg.Slider(range=(-100, 100), orientation='v', size=(10, 20),
+           enable_events=True, key='sliderReverse', font=('Helvetica 20'))],
+           [sg.Text("Angle %", font="Helvetica 20", key='text'),
            sg.Slider(range=(-100, 100), orientation='h', size=(10, 20),
                      enable_events=True, key='sliderHorizontal', font=('Helvetica 20')),],
            [sg.Text("Ready signal to rm has not been sent", font="Helvetica 20", key='signal',
@@ -230,11 +227,9 @@ while True:
 
     # Update GUI
     eventSG, values = windowSG.read(timeout=20)
-    if (leftTriggerVal != None):
-        windowSG['sliderReverse'].update(int(displayLeftTrigger*50+50))
+    if (leftTriggerVal != None & rightTriggerVal != None):
+        windowSG['sliderReverse'].update(int((displayLeftTrigger+displayRightTrigger)*50))
     if (angle != None):
         windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
-    if (rightTriggerVal != None):
-        windowSG['sliderForward'].update(int(displayRightTrigger*50+50))
 
     # windowSG['-I-'].update(data=cv2.imencode('.ppm', cap.read()[1])[1].tobytes())  # Update image in window
