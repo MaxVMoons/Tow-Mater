@@ -13,15 +13,9 @@ DISCONNECT_MESSAGE = "!DISCONNECT"
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def send(msg):
-    # Create a dictionary representing the tuple as a JSON object
     json_obj = {'key': msg[0], 'value': msg[1]}
-    
-    # Serialize the dictionary to a JSON string
     json_str = json.dumps(json_obj)
-    
-    # Encode the JSON string to bytes
     msg = json_str.encode(FORMAT)
-
     client.sendto(msg, ADDR)
    
 ''' 

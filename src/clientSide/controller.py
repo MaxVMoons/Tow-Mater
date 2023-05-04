@@ -6,7 +6,7 @@ import pygame
 import time
 import client_UDP
 import PySimpleGUI as sg
-import racer
+#import racer
 
 def getStickAngleAlt(x_axis):
     return 90 + (-90 * x_axis)
@@ -74,14 +74,17 @@ def sendThrottle(throttleThreshold):
             res = 0
         else:
             res = round(triggerOutput, 3)
-    # TODO: send throttle to RM. res * 50
+    print(f'Sending throttle value: {res}')
+    client_UDP.send(('throttle', res))
+    
+    # TODO: Send throttle to Race Management.
+    '''
     if res == 'BOOST' or res == 'REVBOOST':
         racerConnect.send_throttle(res)
     else:
         racerConnect.send_throttle(round(res * 50))
-    print(f'Sending throttle value: {res}')
-    client_UDP.send(('throttle', res))
-
+    '''
+    
 def checkBoost():
     global reverseBoost
     global boost
@@ -133,6 +136,7 @@ layout = []
 # Video Capture display
 # layout += [[sg.Image(key='-I-')], ]
 # cap = cv2.VideoCapture(0)  # Setup the camera as a capture device
+'''
 layout += [[sg.Text("Reverse Trigger", font="Helvetica 20", key='text'),
            sg.Slider(range=(0, 100), orientation='v', size=(10,20),
            enable_events=True, key='sliderReverse', font=('Helvetica 20')),
@@ -144,7 +148,19 @@ layout += [[sg.Text("Reverse Trigger", font="Helvetica 20", key='text'),
            enable_events=True, key='sliderHorizontal', font=('Helvetica 20')),],
           [sg.Text("Ready signal to rm has not been sent", font="Helvetica 20", key='signal',
            enable_events=True),]]
+'''
 
+# Video Capture display
+# layout += [[sg.Image(key='-I-')], ]
+# cap = cv2.VideoCapture(0)  # Setup the camera as a capture device
+layout += [[sg.Text("Speed", font="Helvetica 20", key='text'),
+           sg.Slider(range=(-100, 100), orientation='v', size=(10, 20),
+           enable_events=True, key='sliderReverse', font=('Helvetica 20'))],
+           [sg.Text("Angle %", font="Helvetica 20", key='text'),
+           sg.Slider(range=(-100, 100), orientation='h', size=(10, 20),
+                     enable_events=True, key='sliderHorizontal', font=('Helvetica 20')),],
+           [sg.Text("Ready signal to rm has not been sent", font="Helvetica 20", key='signal',
+                    enable_events=True),]]
 # Window from pySimpleGUI
 windowSG = sg.Window("Controller GUI", layout, grab_anywhere=False)
 
@@ -160,27 +176,27 @@ displayLeftTrigger = 0.0
 displayRightTrigger = 0.0
 displayjoystickx = 0.0
 
-readySignalSent = False # TODO: add in Dan's code
-
-# Racer Connection to Race Management with car creation
+# TODO: Racer Connection to Race Management with car creation. ENSURE THE GUI CAN QUIT AFTER WE'RE DONE AND DISCONNECT FROM RM
+'''
 racerConnect = racer.RaceConnection("192.168.8.243")
 racerConnect.start()
+streamLink = racerConnect.sendFeed
+client_UDP.send(('linkWebcam', streamLink))
+'''
 
 while True:
     # To update values
     for event in pygame.event.get():
         # Buttons
         if event.type == pygame.JOYBUTTONDOWN:
-            #TODO: change to "arm" esc
             if joystick.get_button(0):
-                print('Sending ready signal to RM')
-                client_UDP.send(('x', 0))
-                readySignalSent = True
+                print('Starting up steering and motor')
+                client_UDP.send(('setup', 0))
                 eventSG, values= windowSG.read(timeout=20)
-                windowSG['signal'].update("Ready signal to rm has been sent")
+                windowSG['signal'].update("Ready signal to rm has been sent") #TODO change GUI to new message
             elif joystick.get_button(3):
                 print('Quitting pygame, leaving server open')
-                client_UDP.send(('triangle', 0))
+                client_UDP.send(('quitpygame', 0))
                 quitPygame()
             elif event.button in [4,5,6]:
                 print("Quitting pygame AND the server on the beagleboard")
@@ -205,12 +221,13 @@ while True:
     # Send angle [0, 180] and throttle [-2, 2]
     checkBoost()
     sendAngle(20) #TODO: raise threshold if car isn't being kept straight
-    sendThrottle(.1) #TODO: lower threshold is car is not responding to triggers
+    sendThrottle(.1) #TODO: lower threshold is car is not responding to light triggers
         
     # Adjust how much the pygame is updated
     clock.tick(50)
 
     # Update GUI
+    '''
     eventSG, values= windowSG.read(timeout=20)
     if(leftTriggerVal != None):
         windowSG['sliderReverse'].update(int(displayLeftTrigger*50+50))
@@ -218,5 +235,11 @@ while True:
         windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
     if(rightTriggerVal != None):
         windowSG['sliderForward'].update(int(displayRightTrigger*50+50))
-
+    '''
+    # Update GUI
+    eventSG, values = windowSG.read(timeout=20)
+    if (leftTriggerVal != None and rightTriggerVal != None):
+        windowSG['sliderReverse'].update(int((displayLeftTrigger+displayRightTrigger)*50))
+    if (angle != None):
+        windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
     # windowSG['-I-'].update(data=cv2.imencode('.ppm', cap.read()[1])[1].tobytes())  # Update image in window

@@ -3,7 +3,7 @@ import Adafruit_BBIO.PWM as PWM
 '''
 Use a frequency of 50Hz and then a duty cycle range of 5% to 10%. 
 You will want to gradually steer the car using duty cycle values between these two limits.
-Valid angles for RC car in mix (broken?): 140 is max. 0-40 is min . . . in terms of dutyCycle: 4.2-9.8
+Valid angles for RC car in mix: 140 is max. 0-40 is min . . . in terms of dutyCycle: 4.2-9.8
 '''
 
 servoPin="P9_14"
@@ -27,6 +27,10 @@ class Steering(object):
                 #dutyCycle= 1/18*desiredAngle + 2 #converts angle to dutyCycle.
                 PWM.set_duty_cycle(servoPin, dutyCycle)
                 print(f'Current dutyCycle for steering: {dutyCycle}')
+        
+        def stopMotor(self):
+                PWM.stop(servoPin)
+                PWM.cleanup()
 
 '''
 steering = Steering()

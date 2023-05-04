@@ -1,14 +1,17 @@
 # Part 01 using opencv access webcam and transmit the video in HTML
 import cv2
 import  pyshine as ps #  pip3 install pyshine==0.0.9
+#SERVER = '192.168.8.153'
+SERVER = '192.168.6.2'
 HTML="""
 <html>
 <head>
-<title>PyShine Live Streaming</title>
+<title>Car Live Feed</title>
 </head>
 
 <body>
-<center><h1> OpenCV Cam test </h1></center>
+<center> <div width='640' height = '240' 
+<center><h1> LIVE BEAGLEBONE REACTION </h1></center>
 <center><img src="stream.mjpg" width='640' height='480' autoplay playsinline></center>
 </body>
 </html>
@@ -16,7 +19,7 @@ HTML="""
 def main():
     StreamProps = ps.StreamProps
     StreamProps.set_Page(StreamProps,HTML)
-    address = ('192.168.8.153',9000) # Enter your IP address 
+    address = (SERVER,9000) # Enter your IP address 
     try:
         StreamProps.set_Mode(StreamProps,'cv2')
         

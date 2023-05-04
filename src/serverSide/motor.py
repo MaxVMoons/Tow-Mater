@@ -23,36 +23,67 @@ A duty cycle of 7.5% is fully stopped, so I would go from 7.5 -> 7 -> 6.5 ->... 
 
 After initialization, you just need to use the PWM.set_duty_cycle("P9_16",dutyCycle) command
 
-TODO: figure out range for motor by testing on car. Figure out range for no motor movement. Figure out upper and lower bounds for triggers. Boost and reverse boost.
+TODO: figure out throttle range for motor by testing on car. Figure out range for no motor movement. Figure out upper and lower bounds for triggers. Boost and reverse boost.
 '''
 
 import Adafruit_BBIO.PWM as PWM
+import time
 
 servoPin="P9_16"
 duty = 0
 freq = 50
+lastDutyCycle = 7.5
 
-# Translate [-2, 0, 2] to [5, 7.5, 10]
-# TODO: if BOOST or REVBOOST, try to find a way to accerlate smoothly.
+# Translate [-2, 0, 2] to [10, 7.5, 5]
 def translateThrottle(inputThrottle):
+        global lastDutyCycle
         if inputThrottle == 'BOOST':
-                return 10
+                lastDutyCycle -= 0.2
+                if lastDutyCycle < 5: lastDutyCycle = 5
         elif inputThrottle == 'REVBOOST':
-                return 5
+                lastDutyCycle += 0.2
+                if lastDutyCycle > 10: lastDutyCycle = 10
         else:
-                scale = 5 #the higher the scale, the lower the range for the throttle
-                return (inputThrottle / scale) + 7.5 #TODO: check why forwards/backwards is opposite (requires -)
+                scale = 3 #the higher the scale, the lower the range for the throttle
+                lastDutyCycle = -(inputThrottle / scale) + 7.5 
+        return lastDutyCycle
 
 class Motor(object):
         def __init__(self):
                 PWM.start(servoPin, duty, freq)
-                PWM.set_duty_cycle("P9_16",7.5) #TODO: arm esc instead of setting duty cycle
+                PWM.set_duty_cycle("P9_16",7.5)
+                lastDutyCycle = 7.5
+                
+        #auto calibrate the ESC (not needed?)
+        def armESC():
+                PWM.set_duty_cycle(servoPin, 0.0)
+                print("Ensure battery is connected AND switch if OFF. Press ENTER to continue")
+                imp = input()
+                if imp == '':
+                        PWM.set_duty_cycle(servoPin, 10.0)
+                        print('Working...')
+                        time.sleep(7)
+                        print("Wait for it ...")
+                        time.sleep(5)
+                        print("Almost there . . .")
+                        PWM.set_duty_cycle(servoPin, 0.0)
+                        time.sleep(2)
+                        print("Arming ESC now ...")
+                        PWM.set_duty_cycle(servoPin, 10.0)
+                        time.sleep(1)
+                        print("ESC is arm. Car is ready")
+                        PWM.set_duty_cycle(servoPin, 7.5)
 
         def changeThrottle(self, dutyCycle: float):
                 #dutyCycle=float(input("What throttle do You Want (5-10; 7.5 to stop): ")) #debugging
                 dutyCycle = round(translateThrottle(dutyCycle), 1)
                 PWM.set_duty_cycle(servoPin, dutyCycle)
                 print(f'Current dutyCycle for motor: {dutyCycle}')
+
+        def stopMotor(self):
+                PWM.stop(servoPin)
+                PWM.cleanup()
+
 '''
 motor = Motor()
 while True:
