@@ -228,7 +228,7 @@ while True:
     # Update GUI
     eventSG, values = windowSG.read(timeout=20)
     if (leftTriggerVal != None & rightTriggerVal != None):
-        windowSG['sliderReverse'].update(int((displayLeftTrigger+displayRightTrigger)*50))
+        windowSG['sliderReverse'].update(int((-1*displayLeftTrigger+displayRightTrigger)*50))
     if (angle != None):
         windowSG['sliderHorizontal'].update(int(displayjoystickx*100))
 
